@@ -1,0 +1,562 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>AI Readiness Check</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one question at a time on a narrow column, then a results page with
+   a score, a priority-ordered breakdown and concrete next steps. */
+
+:root {
+  --bg: #F3F5F1;
+  --surface: #FFFFFF;
+  --ink: #18221E;
+  --muted: #5B6862;
+  --line: #D5DDD7;
+  --accent: #1D6B58;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E1EEE9;
+  --warn: #8A5410;
+  --warn-soft: #F7EBD9;
+  --track: #DFE6E1;
+  --font-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101713;
+    --surface: #18221D;
+    --ink: #E7EEE9;
+    --muted: #9DB0A6;
+    --line: #2C3A33;
+    --accent: #5CC2A4;
+    --accent-ink: #0F1A15;
+    --accent-soft: #1E3930;
+    --warn: #E0A34A;
+    --warn-soft: #362A18;
+    --track: #26332C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101713;
+  --surface: #18221D;
+  --ink: #E7EEE9;
+  --muted: #9DB0A6;
+  --line: #2C3A33;
+  --accent: #5CC2A4;
+  --accent-ink: #0F1A15;
+  --accent-soft: #1E3930;
+  --warn: #E0A34A;
+  --warn-soft: #362A18;
+  --track: #26332C;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 40px;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 640px; margin: 0 auto; min-width: 0; }
+[hidden] { display: none !important; }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.1rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; margin-top: 6px; }
+h3 { font-size: 1.15rem; margin-top: 36px; margin-bottom: 12px; }
+p { margin: 0; max-width: 65ch; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.lead { margin-top: 14px; color: var(--ink); }
+.muted { color: var(--muted); }
+.small { font-size: 0.88rem; }
+
+header.top { padding-block: 8px 24px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+
+/* Buttons */
+button { font: inherit; cursor: pointer; }
+button:focus-visible, .opt:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.primary, .ghost {
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.primary { background: var(--accent); color: var(--accent-ink); }
+.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+/* Intro */
+.points { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.points li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.points strong { display: block; font-weight: 600; }
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Quiz */
+.progress { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); }
+.bar { height: 6px; background: var(--track); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
+.dimlabel { margin-top: 26px; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.why {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.94rem;
+}
+#opts { display: grid; gap: 10px; margin-top: 20px; }
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  text-align: left;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.opt:hover { border-color: var(--accent); }
+.opt .mark {
+  flex: 0 0 18px;
+  width: 18px; height: 18px;
+  border: 2px solid var(--muted);
+  border-radius: 50%;
+}
+.opt[aria-checked="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.opt[aria-checked="true"] .mark { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 5px, transparent 6px); }
+.nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; }
+
+/* Results */
+.level {
+  padding: 22px 22px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.score { font-family: var(--font-mono); font-size: 0.92rem; color: var(--muted); margin-top: 8px; }
+.level p { margin-top: 10px; }
+
+.dim {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-top: 12px;
+  min-width: 0;
+}
+.dim-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.dim-head strong { font-weight: 600; }
+.dim-score { font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted); }
+.dim .bar { margin-top: 10px; }
+.dim p.advice { margin-top: 12px; }
+.band {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.band.start { background: var(--warn-soft); color: var(--warn); }
+.band.build { background: var(--track); color: var(--ink); }
+.band.strong { background: var(--accent-soft); color: var(--accent); }
+.mod { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+ul.plain li { max-width: 65ch; }
+
+.box {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.box p + p { margin-top: 8px; }
+
+textarea#summary {
+  width: 100%;
+  min-height: 180px;
+  margin-top: 12px;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  resize: vertical;
+}
+#copyStatus { margin-top: 10px; min-height: 1.4em; }
+
+footer.foot {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar > div { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Self-assessment · 10 questions · about 5 minutes</p>
+    <h1>AI Readiness Check</h1>
+  </header>
+
+  <!-- Intro -->
+  <section id="intro" aria-labelledby="introHead">
+    <h2 id="introHead" tabindex="-1">Find out where you stand before you start</h2>
+    <p class="lead">Answer ten multiple-choice questions about how you use AI, how you check it, and how you show what you can do. You will get a readiness level, a breakdown by area, and the next steps to take.</p>
+    <ul class="points">
+      <li><span class="tag">5 areas</span><div><strong>Two questions each</strong>Practical use, checking AI output, thinking with AI, showing your skill, and your goal and time.</div></li>
+      <li><span class="tag">Guided</span><div><strong>One question at a time</strong>Each question says why it matters. You can go back and change any answer.</div></li>
+      <li><span class="tag">Private</span><div><strong>Answers stay on your screen</strong>Nothing is sent anywhere. Copy the summary if you want to keep it.</div></li>
+    </ul>
+    <div class="actions">
+      <button class="primary" id="startBtn" type="button">Start the check</button>
+    </div>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" hidden aria-labelledby="q">
+    <div class="progress"><span id="step"></span><span id="pct"></span></div>
+    <div class="bar" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><div id="fill"></div></div>
+    <p class="dimlabel" id="dimLabel"></p>
+    <h2 id="q" tabindex="-1"></h2>
+    <p class="why" id="why"></p>
+    <div id="opts" role="radiogroup" aria-labelledby="q"></div>
+    <div class="nav">
+      <button class="ghost" id="back" type="button">Back</button>
+      <button class="primary" id="next" type="button" disabled>Next</button>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="result" hidden aria-labelledby="resHead">
+    <h2 id="resHead" tabindex="-1">Your readiness</h2>
+    <div class="level" id="levelBox"></div>
+
+    <h3>Your breakdown</h3>
+    <p class="muted small">Ordered from the area that needs most attention to the strongest.</p>
+    <div id="dims"></div>
+
+    <h3>Before you enrol</h3>
+    <div class="box">
+      <ul class="plain">
+        <li>Most lessons in AI for Essential Digital Skills (AI4EDS) open only after you enrol. Two Module 1 lessons are free previews.</li>
+        <li>The course is free and self-paced, with five modules, a quiz per module and practical exercises.</li>
+        <li>Total hours, deadlines, language and certificate details are not stated on the course page. Check these before you commit time.</li>
+        <li>Eligibility for the AVPN-funded programme is not clear from the course page. Check the terms if it matters to you.</li>
+        <li>AI tools change quickly. Treat tool-specific steps as examples and check the current interface.</li>
+      </ul>
+    </div>
+
+    <h3>Other routes on the site</h3>
+    <div class="box">
+      <p>If you want to build AI-powered apps, look at <em>Vibe Coding 101</em>. If your focus is governance and ethics, look at <em>Responsible AI</em>.</p>
+    </div>
+
+    <h3>Keep your summary</h3>
+    <div class="actions" style="margin-top:12px">
+      <button class="ghost" id="copyBtn" type="button">Copy summary</button>
+    </div>
+    <p class="small muted" id="copyStatus" aria-live="polite"></p>
+    <textarea id="summary" readonly hidden aria-label="Result summary"></textarea>
+
+    <div class="actions">
+      <button class="ghost" id="restart" type="button">Take the check again</button>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>This is a self-assessment with no official status. It draws on ideas from IAL's Skills-First: Framework for Action (2026) but does not reproduce it, and it is not an official IAL tool. It does not predict course success.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  // Each question scores 0 to 3. Each area has two questions, so each area scores 0 to 6 and the total is 0 to 30.
+  var AREAS = {
+    use:      { name: "Practical AI use", mod: "Module 2: Maximise Productivity with AI Tools",
+                tips: { start: "Start with one free AI tool and use it for one small work task each week. Begin with Module 1 for the basics, then Module 2 for work tools.",
+                        build: "Pick one recurring task and use AI for it every week for a month. Module 2 covers productivity tools.",
+                        strong: "Move to a harder, multi-step task so you can test what you have learned." } },
+    verify:   { name: "Checking AI output", mod: "Module 4: Use AI Responsibly",
+                tips: { start: "Before you rely on any AI answer, check its key facts against one trusted source. Module 4 covers responsible use.",
+                        build: "Write a short checklist for checking AI output and use it every time, especially for figures and names.",
+                        strong: "Share your checklist with colleagues so the whole team checks outputs the same way." } },
+    think:    { name: "Thinking with AI", mod: "Module 3: Discover the Art of Prompt Engineering",
+                tips: { start: "Try one task with a prompt, then change one thing at a time to see what improves the answer. Module 3 covers prompting.",
+                        build: "Keep a short prompt log showing what you changed and why the answer got better.",
+                        strong: "Refine a prompt you use often and test it against alternatives on real examples." } },
+    evidence: { name: "Showing your skill", mod: "Practical exercises in each module",
+                tips: { start: "Keep a simple record of each thing you try with AI: the task, the prompt and what worked. This becomes your first evidence.",
+                        build: "Add a real work sample to your record and ask one person to review it.",
+                        strong: "Turn your record into a short account of what changed at work, with the evidence behind it." } },
+    goal:     { name: "Goal and time", mod: "Module 5: Stay Ahead of the AI Curve",
+                tips: { start: "Write one sentence: what you want AI to help you do, and by when. Block one fixed slot each week, even one hour.",
+                        build: "Turn your goal into a measurable target, such as time saved or quality checked.",
+                        strong: "Review your goal every quarter and choose the next modules or courses to match it." } }
+  };
+
+  var QUESTIONS = [
+    { area: "use", q: "How often have you used a generative AI tool, such as a chatbot, for work?",
+      why: "Skills grow through real use, not only through exposure to the idea.",
+      opts: [["Never", 0], ["Once or twice", 1], ["Most weeks", 2], ["Part of my regular work", 3]] },
+    { area: "use", q: "Can you name one work task you want AI to help with in the next three months?",
+      why: "A specific task gives your learning a practical project to practise on.",
+      opts: [["No", 0], ["A vague idea", 1], ["Yes, one specific task", 2], ["Yes, and I know how I will judge whether it helped", 3]] },
+    { area: "verify", q: "When an AI answer includes facts or figures, what do you usually do?",
+      why: "Information literacy means knowing how to verify what AI produces before you use it.",
+      opts: [["Use it as it is", 0], ["Skim it", 1], ["Check the key claims against a source", 2], ["Check the claims and record what I verified and how", 3]] },
+    { area: "verify", q: "How well can you spot a wrong, biased or made-up AI answer?",
+      why: "AI can sound confident while being wrong. Spotting this is a core skill.",
+      opts: [["I am not sure I could", 0], ["Sometimes", 1], ["Usually", 2], ["Reliably, and I can explain why", 3]] },
+    { area: "think", q: "When an AI response is unhelpful, what do you do next?",
+      why: "Cognitive literacy means using AI as a thinking partner, not a one-shot answer machine.",
+      opts: [["Start a new chat", 0], ["Rephrase once and hope", 1], ["Add context, limits or examples and try again", 2], ["Work out what was missing and refine step by step", 3]] },
+    { area: "think", q: "How do you decide which parts of a task to give to AI and which to keep yourself?",
+      why: "Deciding where human judgement is needed is central to working well with AI.",
+      opts: [["I do not really decide", 0], ["I go by feel", 1], ["Based on risk and how much it matters", 2], ["Using a rule I have written down and review", 3]] },
+    { area: "evidence", q: "After you learn something new, how do you show what you can do?",
+      why: "Skills are verified through application. A certificate alone does not show what you can do.",
+      opts: [["I rely on a certificate", 0], ["I keep notes", 1], ["I keep a work sample or output", 2], ["I keep a work sample and someone has reviewed it", 3]] },
+    { area: "evidence", q: "Who could give you feedback on how you use AI at work?",
+      why: "Feedback speeds up learning and makes progress visible to you and to others.",
+      opts: [["No one", 0], ["Friends or peers, informally", 1], ["My manager or a mentor", 2], ["A team or community that reviews work regularly", 3]] },
+    { area: "goal", q: "How much time can you set aside for learning each week?",
+      why: "Learning works best at a pace that fits your work and family life.",
+      opts: [["I am not sure yet", 0], ["Under 1 hour", 1], ["1 to 2 hours", 2], ["3 hours or more", 3]] },
+    { area: "goal", q: "How clear is your reason for learning AI?",
+      why: "A clear goal helps you choose the right modules and know when you have finished.",
+      opts: [["Not clear yet", 0], ["A general sense that I should", 1], ["A specific goal for my role", 2], ["A specific goal with a way to measure progress", 3]] }
+  ];
+
+  var answers = new Array(QUESTIONS.length).fill(null);
+  var i = 0;
+
+  function $(id) { return document.getElementById(id); }
+
+  function show(id) {
+    ["intro", "quiz", "result"].forEach(function (s) { $(s).hidden = (s !== id); });
+    var head = id === "intro" ? $("introHead") : id === "quiz" ? $("q") : $("resHead");
+    if (head) head.focus({ preventScroll: false });
+    window.scrollTo(0, 0);
+  }
+
+  function renderQuestion() {
+    var item = QUESTIONS[i];
+    var n = QUESTIONS.length;
+    var answered = answers.filter(function (a) { return a !== null; }).length;
+    var pct = Math.round((i / n) * 100);
+    $("step").textContent = "Question " + (i + 1) + " of " + n;
+    $("pct").textContent = answered + " answered";
+    $("fill").style.width = pct + "%";
+    $("progressBar").setAttribute("aria-valuenow", String(pct));
+    $("dimLabel").textContent = AREAS[item.area].name;
+    $("q").textContent = item.q;
+    $("why").textContent = "Why we ask: " + item.why;
+
+    var box = $("opts");
+    box.textContent = "";
+    item.opts.forEach(function (opt, k) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      b.setAttribute("role", "radio");
+      var checked = answers[i] === k;
+      b.setAttribute("aria-checked", checked ? "true" : "false");
+      var mark = document.createElement("span");
+      mark.className = "mark";
+      mark.setAttribute("aria-hidden", "true");
+      var label = document.createElement("span");
+      label.textContent = opt[0];
+      b.appendChild(mark);
+      b.appendChild(label);
+      b.addEventListener("click", function () {
+        answers[i] = k;
+        renderQuestion();
+      });
+      box.appendChild(b);
+    });
+
+    $("back").disabled = (i === 0);
+    $("next").disabled = (answers[i] === null);
+    $("next").textContent = (i === n - 1) ? "See my result" : "Next";
+  }
+
+  function levelFor(total) {
+    if (total >= 24) return { title: "Ready now", cls: "strong",
+      text: "You already have the habits this course builds on. Enrol and focus your time on the areas marked as building or start here below." };
+    if (total >= 15) return { title: "Ready with preparation", cls: "build",
+      text: "You have a good base. Spend a few days on your weakest area before you enrol, then start the course." };
+    return { title: "Build foundations first", cls: "start",
+      text: "Try one AI tool for a week and watch the free Module 1 preview before you enrol. A slower start will make the course easier to finish." };
+  }
+
+  function bandFor(score) {
+    if (score <= 2) return { key: "start", label: "Start here" };
+    if (score <= 4) return { key: "build", label: "Building" };
+    return { key: "strong", label: "Strong" };
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function showResult() {
+    var total = 0;
+    var areaScore = {};
+    Object.keys(AREAS).forEach(function (k) { areaScore[k] = 0; });
+    QUESTIONS.forEach(function (item, idx) {
+      var pts = item.opts[answers[idx]][1];
+      total += pts;
+      areaScore[item.area] += pts;
+    });
+
+    var level = levelFor(total);
+    var lb = $("levelBox");
+    lb.textContent = "";
+    lb.appendChild(el("h2", "", level.title));
+    lb.appendChild(el("p", "score", "Score " + total + " of 30"));
+    lb.appendChild(el("p", "", level.text));
+
+    var order = Object.keys(AREAS).sort(function (a, b) { return areaScore[a] - areaScore[b]; });
+    var dims = $("dims");
+    dims.textContent = "";
+    var summaryLines = [];
+    summaryLines.push("AI Readiness Check: " + level.title + " (" + total + " of 30)");
+    summaryLines.push("");
+
+    order.forEach(function (k) {
+      var a = AREAS[k];
+      var s = areaScore[k];
+      var band = bandFor(s);
+      var card = el("div", "dim");
+      var head = el("div", "dim-head");
+      head.appendChild(el("strong", "", a.name));
+      var right = el("span", "", "");
+      right.style.display = "inline-flex";
+      right.style.gap = "8px";
+      right.style.alignItems = "center";
+      right.appendChild(el("span", "dim-score", s + " of 6"));
+      right.appendChild(el("span", "band " + band.key, band.label));
+      head.appendChild(right);
+      card.appendChild(head);
+
+      var bar = el("div", "bar");
+      bar.setAttribute("role", "img");
+      bar.setAttribute("aria-label", a.name + ": " + s + " of 6");
+      var fill = el("div", "");
+      fill.style.width = Math.round((s / 6) * 100) + "%";
+      bar.appendChild(fill);
+      card.appendChild(bar);
+
+      card.appendChild(el("p", "advice", a.tips[band.key]));
+      card.appendChild(el("p", "mod", "Course link: " + a.mod));
+      dims.appendChild(card);
+
+      summaryLines.push(a.name + ": " + s + " of 6 (" + band.label + ")");
+      summaryLines.push("  Next: " + a.tips[band.key]);
+    });
+
+    summaryLines.push("");
+    summaryLines.push("Self-assessment inspired by IAL's Skills-First: Framework for Action (2026). Not an official IAL tool.");
+
+    var ta = $("summary");
+    ta.value = summaryLines.join("\n");
+    ta.hidden = true;
+    $("copyStatus").textContent = "";
+
+    show("result");
+  }
+
+  $("startBtn").addEventListener("click", function () { i = 0; renderQuestion(); show("quiz"); });
+
+  $("back").addEventListener("click", function () {
+    if (i > 0) { i--; renderQuestion(); }
+  });
+
+  $("next").addEventListener("click", function () {
+    if (answers[i] === null) return;
+    if (i < QUESTIONS.length - 1) { i++; renderQuestion(); }
+    else { showResult(); }
+  });
+
+  $("copyBtn").addEventListener("click", function () {
+    var text = $("summary").value;
+    var status = $("copyStatus");
+    var ta = $("summary");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        status.textContent = "Copied. You can paste it anywhere.";
+      }, function () { manualCopy(); });
+    } else {
+      manualCopy();
+    }
+    function manualCopy() {
+      ta.hidden = false;
+      ta.focus();
+      ta.select();
+      status.textContent = "Copy is not available here. The text is selected below. Press Ctrl or Command plus C to copy it.";
+    }
+  });
+
+  $("restart").addEventListener("click", function () {
+    answers = new Array(QUESTIONS.length).fill(null);
+    i = 0;
+    show("intro");
+  });
+})();
+</script>
